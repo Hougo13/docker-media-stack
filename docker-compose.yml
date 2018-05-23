@@ -1,0 +1,21 @@
+version: '3.4'
+
+services:
+  nextcloud:
+    build: ./nextcloud
+    restart: always
+    ports:
+      - 8080:80
+    volumes:
+      - media:/mnt/media
+      
+  plex:
+    image: plexinc/pms-docker
+    restart: always
+    ports:
+      - 32400:32400
+    volumes:
+      - media:/data
+      
+volumes:
+  media:

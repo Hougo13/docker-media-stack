@@ -2,7 +2,7 @@ version: '3.4'
 
 services:
   nextcloud:
-    build: ./nextcloud
+    build: nextcloud/
     restart: always
     ports:
       - 8080:80

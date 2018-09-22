@@ -1,0 +1,49 @@
+version: "3"
+services:
+  traefik:
+    image: traefik:latest
+    command:
+      - "--api"
+      - "--entrypoints=Name:http Address::80 Redirect.EntryPoint:https"
+      - "--entrypoints=Name:https Address::443 TLS"
+      - "--defaultentrypoints=http,https"
+      - "--acme"
+      - "--acme.storage=/etc/traefik/acme/acme.json"
+      - "--acme.entryPoint=https"
+      - "--acme.httpChallenge.entryPoint=http"
+      - "--acme.onHostRule=true"
+      - "--acme.onDemand=false"
+      - "--acme.email=hougo13@gmail.com"
+      - "--docker"
+      - "--docker.swarmMode"
+      - "--docker.domain=hrenard.fr"
+      - "--docker.watch"
+      - "--debug"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - acme:/etc/traefik/acme
+    networks:
+      - webgateway
+      - traefik
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+networks:
+  webgateway:
+    driver: overlay
+    external: true
+  traefik:
+    driver: overlay
+volumes:
+  acme:

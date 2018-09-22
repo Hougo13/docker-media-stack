@@ -1,0 +1,68 @@
+version: '3.4'
+
+services:
+
+  db:
+    image: mariadb
+    restart: always
+    volumes:
+      - db:/var/lib/mysql
+    networks: 
+      - dbnet
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=${PASSWORD}
+
+  nextcloud:
+    image: nextcloud
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - 9001:80
+    volumes:
+      - nextcloud:/var/www/html
+      - media:/var/www/html/data
+    networks: 
+      - dbnet
+      - webgateway
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=${PASSWORD}
+      - NEXTCLOUD_ADMIN_USER=admin
+      - NEXTCLOUD_ADMIN_PASSWORD=${PASSWORD}
+    deploy:
+      labels:
+        - traefik.docker.network=webgateway
+        - traefik.basic.port=9001
+        - traefik.basic.frontend.rule=Host:cloud.hrenard.fr
+
+  plex:
+    image: plexinc/pms-docker
+    restart: always
+    ports:
+      - 32400:32400
+    volumes:
+      - plex:/config
+      - media:/data:cached
+    environment:
+      - HOSTNAME=MediaServer
+      - PLEX_UID=33
+      - PLEX_GID=33
+      
+volumes:
+  media:
+  nextcloud:
+  plex:
+  db:
+
+networks: 
+  dbnet:
+    driver: overlay
+  webgateway:
+    driver: overlay
+    external: true
